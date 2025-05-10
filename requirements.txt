@@ -1,0 +1,6 @@
+river
+torch
+numpy
+pandas
+matplotlib
+yfinance
