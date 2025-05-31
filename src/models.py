@@ -25,7 +25,7 @@ class TimeSeriesMLP(nn.Module):
         return self.network(x)
     
 class RNNModel(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size, num_layers=1, rnn_type='LSTM'):
+    def __init__(self, input_size, hidden_size, output_size, num_layers=1, rnn_type='lstm'):
         '''
         Recurrent model (LSTM or GRU) for time series.
         input_size = feature dimension per time step.
@@ -42,22 +42,17 @@ class RNNModel(nn.Module):
         self.fc = nn.Linear(hidden_size, output_size)
         self.hidden = None
     
-    def forward(self, x):
-        # x: [batch, seq_len, input_size]
+    def forward(self, x):      
+        if self.hidden is not None:
+            if isinstance(self.hidden, tuple):  # LSTM
+                self.hidden = tuple(h.detach() for h in self.hidden)
+            else:  # GRU
+                self.hidden = self.hidden.detach()
         out, self.hidden = self.rnn(x, self.hidden)
+
         # Use the last output for prediction
         out = out[:, -1, :]
         return self.fc(out)
-    
-    def reset_hidden(self, batch_size):
-        # Reinitialize hidden state (and cell state for LSTM) to zeros
-        if self.rnn_type == 'lstm':
-            h = torch.zeros(self.num_layers, batch_size, self.hidden_size)
-            c = torch.zeros(self.num_layers, batch_size, self.hidden_size)
-            self.hidden = (h, c)
-        else:
-            h = torch.zeros(self.num_layers, batch_size, self.hidden_size)
-            self.hidden = h
 
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len=5000):
