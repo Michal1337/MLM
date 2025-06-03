@@ -73,7 +73,7 @@ class PositionalEncoding(nn.Module):
         return x
 
 class TimeSeriesTransformer(nn.Module):
-    def __init__(self, input_size, d_model, nhead, num_layers, dim_feedforward, output_size):
+    def __init__(self, input_size, d_model, nhead, num_layers, output_size):
         '''
         Simplified Transformer encoder for time series.
         input_size = features per step (often 1).
@@ -82,7 +82,7 @@ class TimeSeriesTransformer(nn.Module):
         super(TimeSeriesTransformer, self).__init__()
         self.input_proj = nn.Linear(input_size, d_model)
         self.positional_encoding = PositionalEncoding(d_model)
-        encoder_layer = nn.TransformerEncoderLayer(d_model, nhead, dim_feedforward, batch_first=True)
+        encoder_layer = nn.TransformerEncoderLayer(d_model, nhead, 4 * d_model, batch_first=True)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
         self.fc = nn.Linear(d_model, output_size)
     
