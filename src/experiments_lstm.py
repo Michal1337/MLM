@@ -83,7 +83,6 @@ def train_model(model, detector, x_all, y_all, seq_len, optimizer, loss_fn, devi
     return model, avg_loss, avg_mae_post_warmup, avg_mae_full
 
 
-
 if __name__ == "__main__":
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     streams = [generate_trend_drift, generate_seasonal_drift, generate_ar1_drift]
@@ -92,7 +91,7 @@ if __name__ == "__main__":
     detector_types = ["ADWIN", "PageHinkley"]
     drift_actions = [increase_lr_only, increase_and_decay_lr]
     seq_lens = [16, 32, 64]
-    hidden_sizess = [[16], [32, 32], [64, 64]]
+    hidden_sizess = [16, 32, 64]
     for stream_func in streams:
         for n_dim in tqdm(n_dims):
             for n_points in n_pointss:
@@ -115,7 +114,8 @@ if __name__ == "__main__":
                                 model, loss, mae_full, mae_warmup = train_model(
                                     model,
                                     detector,
-                                    data,
+                                    x_all,
+                                    y_all,
                                     seq_len,
                                     optimizer,
                                     loss_fn,

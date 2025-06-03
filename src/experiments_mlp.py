@@ -113,8 +113,8 @@ if __name__ == "__main__":
                                 model, loss, mae_full, mae_warmup = train_model(
                                     model,
                                     detector,
-                                    data,
-                                    seq_len,
+                                    x_all,
+                                    y_all,
                                     optimizer,
                                     loss_fn,
                                     device=device,
