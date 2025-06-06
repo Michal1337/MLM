@@ -55,19 +55,20 @@ if __name__ == "__main__":
     n_dims = [1, 3, 5]
     n_pointss = [20_000, 50_000]
     seq_lens = [16, 32, 64]
-    hidden_sizess = [16, 32, 64]
+    d_models = [16, 32, 64]
     for stream_func in streams:
         for n_dim in tqdm(n_dims):
             for n_points in n_pointss:
                 data = stream_func(n_periods=n_points, n_dims=n_dim)
                 for seq_len in seq_lens:
-                    for hidden_sizes in hidden_sizess:
+                    for d_model in d_models:
                         x_all, y_all = make_dataset(data, seq_len)
-                        model = RNNModel(
+                        model = TimeSeriesTransformer(
                             input_size=n_dim,
-                            hidden_size=hidden_sizes,
+                            d_model=d_model,
+                            nhead=2,
+                            num_layers=2,
                             output_size=n_dim,
-                            rnn_type='lstm'
                         )
                         model.to(device)
                         optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -82,7 +83,7 @@ if __name__ == "__main__":
                             device,
                         )
                         # save stream, n_dim, n_points, detector_type, seq_len, hidden_sizes, train_loss, test_loss to CVS file
-                        with open("results_lstm.csv", "a") as f:
+                        with open("results_transformer.csv", "a") as f:
                             f.write(
-                                f"{stream_func.__name__};{n_dim};{n_points};None;Baseline;{seq_len};{hidden_sizes};{loss};{mae_full};{mae_warmup}\n"
+                                f"{stream_func.__name__};{n_dim};{n_points};None;Baseline;{seq_len};{d_model};{loss};{mae_full};{mae_warmup}\n"
                             )
