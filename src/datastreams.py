@@ -78,10 +78,9 @@ def generate_ar1_drift(
 
     return y
 
-def generate_crypto_time_series(data_path, n_points):
+def generate_crypto_time_series(data_path):
     df = pd.read_csv(data_path)
     data = df['close'].values
-    data = data[-n_points:]
     return data
 
 def generate_water_flow_data():
