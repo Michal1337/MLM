@@ -1,9 +1,11 @@
 from datastreams import generate_crypto_time_series
 from models import *
 import numpy as np
+from river import preprocessing
 import pandas as pd
 from driftdetector import DriftDetector
 from tqdm import tqdm
+
 
 def make_dataset(data, seq_len):
     time_series = []
@@ -171,7 +173,7 @@ if __name__ == "__main__":
                         model.to(device)
                         optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
                         loss_fn = nn.MSELoss()
-                        model, loss, mae_full, mae_warmup, preds = train_model(
+                        model, loss, mae_full, mae_warmup, preds = train_model_mlp(
                             model,
                             detector,
                             x_all,
@@ -185,7 +187,7 @@ if __name__ == "__main__":
                         # save stream, n_dim, n_points, detector_type, seq_len, hidden_sizes, train_loss, test_loss to CVS file
                         with open("crypto_mlp.csv", "a") as f:
                             f.write(
-                                f"{path.split("/")[-1].split("_")[0]};1;{len(data)};{detector_type};{seq_len};{hidden_sizes};{loss};{mae_full};{mae_warmup};{budget};{max_budget}\n"
+                                f"{path.split("/")[-1].split("_")[0]};1;{len(data)};{detector_type};{drift_action.__name__};{seq_len};{hidden_sizes};{loss};{mae_full};{mae_warmup};{budget};{max_budget}\n"
                             )
 
     hidden_sizess = [16, 32, 64]
@@ -221,7 +223,7 @@ if __name__ == "__main__":
                         # save stream, n_dim, n_points, detector_type, seq_len, hidden_sizes, train_loss, test_loss to CVS file
                         with open("crypto_rnn.csv", "a") as f:
                             f.write(
-                                f"{path.split("/")[-1].split("_")[0]};1;{len(data)};{detector_type};{seq_len};{hidden_sizes};{loss};{mae_full};{mae_warmup};{budget};{max_budget}\n"
+                                f"{path.split("/")[-1].split("_")[0]};1;{len(data)};{detector_type};{drift_action.__name__};{seq_len};{hidden_sizes};{loss};{mae_full};{mae_warmup};{budget};{max_budget}\n"
                             )
 
 
@@ -257,7 +259,7 @@ if __name__ == "__main__":
                         # save stream, n_dim, n_points, detector_type, seq_len, hidden_sizes, train_loss, test_loss to CVS file
                         with open("crypto_lstm.csv", "a") as f:
                             f.write(
-                                f"{path.split("/")[-1].split("_")[0]};1;{len(data)};{detector_type};{seq_len};{hidden_sizes};{loss};{mae_full};{mae_warmup};{budget};{max_budget}\n"
+                                f"{path.split("/")[-1].split("_")[0]};1;{len(data)};{detector_type};{drift_action.__name__};{seq_len};{hidden_sizes};{loss};{mae_full};{mae_warmup};{budget};{max_budget}\n"
                             )
 
     d_models = [16, 32, 64]
@@ -294,5 +296,5 @@ if __name__ == "__main__":
                         # save stream, n_dim, n_points, detector_type, seq_len, hidden_sizes, train_loss, test_loss to CVS file
                         with open("crypto_transformer.csv", "a") as f:
                             f.write(
-                                f"{path.split("/")[-1].split("_")[0]};1;{len(data)};{detector_type};{seq_len};{hidden_sizes};{loss};{mae_full};{mae_warmup};{budget};{max_budget}\n"
+                                f"{path.split("/")[-1].split("_")[0]};1;{len(data)};{detector_type};{drift_action.__name__};{seq_len};{hidden_sizes};{loss};{mae_full};{mae_warmup};{budget};{max_budget}\n"
                             )

@@ -8,12 +8,11 @@
 #SBATCH --partition=short              # Specify the short queue
 
 # Ensure pyenv is initialized
-export PATH="$HOME/.pyenv/bin:$PATH"
-export LD_LIBRARY_PATH=$HOME/local/libffi/lib:$LD_LIBRARY_PATH
-export PKG_CONFIG_PATH=$HOME/local/libffi/lib/pkgconfig:$PKG_CONFIG_PATH
-export C_INCLUDE_PATH=$HOME/local/libffi/include:$C_INCLUDE_PATH
+export HOME=/mnt/evafs/faculty/home/mgromadzki
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init --path)"
 eval "$(pyenv virtualenv-init -)"
 
 # Run Python script
-python experiments_baseline.py
+python experiments_crypto_baseline.py
