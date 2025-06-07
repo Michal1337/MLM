@@ -1,17 +1,16 @@
-from datastreams import generate_crypto_time_series
-from models import *
 import numpy as np
-from river import preprocessing
-import pandas as pd
+
+from datastreams import generate_crypto_time_series
 from driftdetector import DriftDetector
-from tqdm import tqdm
+from models import *
 
 
 def make_dataset(data, seq_len):
     time_series = []
     for i in range(len(data) - seq_len + 1):
-        time_series.append(data[i:i + seq_len])
-    return np.array(time_series)[:-1], data[seq_len:], data[seq_len-1:-1]
+        time_series.append(data[i : i + seq_len])
+    return np.array(time_series)[:-1], data[seq_len:], data[seq_len - 1 : -1]
+
 
 def simulate(prices, preds):
     budget = 100
@@ -29,39 +28,41 @@ def simulate(prices, preds):
 
     return budget, max_budget
 
+
 def increase_lr_only(optimizer, drifted, decay_state, factor=2.0, max_lr=0.01):
     if drifted:
         for i, pg in enumerate(optimizer.param_groups):
-            base_lr = decay_state['base_lrs'][i]
-            pg['lr'] = min(base_lr * factor, max_lr)
+            base_lr = decay_state["base_lrs"][i]
+            pg["lr"] = min(base_lr * factor, max_lr)
+
 
 def increase_and_decay_lr(optimizer, drifted, decay_state, factor=2.0, decay_steps=10):
-    base_lrs = decay_state['base_lrs']
-    
+    base_lrs = decay_state["base_lrs"]
+
     if drifted:
         for i, pg in enumerate(optimizer.param_groups):
-            pg['lr'] = base_lrs[i] * factor
-        decay_state['current_decay_step'] = decay_steps
+            pg["lr"] = base_lrs[i] * factor
+        decay_state["current_decay_step"] = decay_steps
 
-    elif decay_state['current_decay_step'] > 0:
-        decay_state['current_decay_step'] -= 1
+    elif decay_state["current_decay_step"] > 0:
+        decay_state["current_decay_step"] -= 1
         for i, pg in enumerate(optimizer.param_groups):
             boosted_lr = base_lrs[i] * factor
-            ratio = decay_state['current_decay_step'] / decay_steps
-            pg['lr'] = base_lrs[i] + (boosted_lr - base_lrs[i]) * ratio
+            ratio = decay_state["current_decay_step"] / decay_steps
+            pg["lr"] = base_lrs[i] + (boosted_lr - base_lrs[i]) * ratio
 
-def train_model_mlp(model, detector, x_all, y_all, optimizer, loss_fn, device, drift_action):
+
+def train_model_mlp(
+    model, detector, x_all, y_all, optimizer, loss_fn, device, drift_action
+):
 
     model.train()
     preds = []
     all_loss = []
 
     # For drift action state
-    base_lrs = [pg['lr'] for pg in optimizer.param_groups]
-    decay_state = {
-        'base_lrs': base_lrs,
-        'current_decay_step': 0
-    }
+    base_lrs = [pg["lr"] for pg in optimizer.param_groups]
+    decay_state = {"base_lrs": base_lrs, "current_decay_step": 0}
 
     step = 0
     mae_values = []
@@ -85,7 +86,7 @@ def train_model_mlp(model, detector, x_all, y_all, optimizer, loss_fn, device, d
             drift_action(optimizer, drifted=True, decay_state=decay_state)
 
         drift_action(optimizer, drifted=False, decay_state=decay_state)
-        
+
         mae_full = torch.abs(pred - y_ten).mean().item()
         mae_values_full.append(mae_full)
 
@@ -95,23 +96,24 @@ def train_model_mlp(model, detector, x_all, y_all, optimizer, loss_fn, device, d
 
     avg_loss = sum(all_loss) / len(all_loss) if all_loss else 0.0
     avg_mae_post_warmup = sum(mae_values) / len(mae_values) if mae_values else 0.0
-    avg_mae_full = sum(mae_values_full) / len(mae_values_full) if mae_values_full else 0.0
-
+    avg_mae_full = (
+        sum(mae_values_full) / len(mae_values_full) if mae_values_full else 0.0
+    )
 
     return model, avg_loss, avg_mae_post_warmup, avg_mae_full, preds
 
-def train_model(model, detector, x_all, y_all, seq_len, optimizer, loss_fn, device, drift_action):
+
+def train_model(
+    model, detector, x_all, y_all, seq_len, optimizer, loss_fn, device, drift_action
+):
 
     model.train()
     preds = []
     all_loss = []
 
     # For drift action state
-    base_lrs = [pg['lr'] for pg in optimizer.param_groups]
-    decay_state = {
-        'base_lrs': base_lrs,
-        'current_decay_step': 0
-    }
+    base_lrs = [pg["lr"] for pg in optimizer.param_groups]
+    decay_state = {"base_lrs": base_lrs, "current_decay_step": 0}
 
     step = 0
     mae_values = []
@@ -135,7 +137,7 @@ def train_model(model, detector, x_all, y_all, seq_len, optimizer, loss_fn, devi
             drift_action(optimizer, drifted=True, decay_state=decay_state)
 
         drift_action(optimizer, drifted=False, decay_state=decay_state)
-        
+
         mae_full = torch.abs(pred - y_ten).mean().item()
         mae_values_full.append(mae_full)
 
@@ -145,13 +147,15 @@ def train_model(model, detector, x_all, y_all, seq_len, optimizer, loss_fn, devi
 
     avg_loss = sum(all_loss) / len(all_loss) if all_loss else 0.0
     avg_mae_post_warmup = sum(mae_values) / len(mae_values) if mae_values else 0.0
-    avg_mae_full = sum(mae_values_full) / len(mae_values_full) if mae_values_full else 0.0
-
+    avg_mae_full = (
+        sum(mae_values_full) / len(mae_values_full) if mae_values_full else 0.0
+    )
 
     return model, avg_loss, avg_mae_post_warmup, avg_mae_full, preds
 
+
 if __name__ == "__main__":
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     paths = ["../data/btc_data.csv", "../data/eth_data.csv"]
     detector_types = ["ADWIN", "PageHinkley"]
     drift_actions = [increase_lr_only, increase_and_decay_lr]
@@ -181,11 +185,11 @@ if __name__ == "__main__":
                             optimizer,
                             loss_fn,
                             device=device,
-                            drift_action=drift_action
+                            drift_action=drift_action,
                         )
                         budget, max_budget = simulate(prices, preds)
                         # save stream, n_dim, n_points, detector_type, seq_len, hidden_sizes, train_loss, test_loss to CVS file
-                        with open("crypto_mlp.csv", "a") as f:
+                        with open("../results/crypto_mlp.csv", "a") as f:
                             f.write(
                                 f"{path.split("/")[-1].split("_")[0]};1;{len(data)};{detector_type};{drift_action.__name__};{seq_len};{hidden_sizes};{loss};{mae_full};{mae_warmup};{budget};{max_budget}\n"
                             )
@@ -203,7 +207,7 @@ if __name__ == "__main__":
                             input_size=1,
                             hidden_size=hidden_sizes,
                             output_size=1,
-                            rnn_type='rnn'
+                            rnn_type="rnn",
                         )
                         model.to(device)
                         optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -217,15 +221,14 @@ if __name__ == "__main__":
                             optimizer,
                             loss_fn,
                             device=device,
-                            drift_action=drift_action
+                            drift_action=drift_action,
                         )
                         budget, max_budget = simulate(prices, preds)
                         # save stream, n_dim, n_points, detector_type, seq_len, hidden_sizes, train_loss, test_loss to CVS file
-                        with open("crypto_rnn.csv", "a") as f:
+                        with open("../results/crypto_rnn.csv", "a") as f:
                             f.write(
                                 f"{path.split("/")[-1].split("_")[0]};1;{len(data)};{detector_type};{drift_action.__name__};{seq_len};{hidden_sizes};{loss};{mae_full};{mae_warmup};{budget};{max_budget}\n"
                             )
-
 
     for path in paths:
         data = generate_crypto_time_series(path)
@@ -239,7 +242,7 @@ if __name__ == "__main__":
                             input_size=1,
                             hidden_size=hidden_sizes,
                             output_size=1,
-                            rnn_type='lstm'
+                            rnn_type="lstm",
                         )
                         model.to(device)
                         optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -253,11 +256,11 @@ if __name__ == "__main__":
                             optimizer,
                             loss_fn,
                             device=device,
-                            drift_action=drift_action
+                            drift_action=drift_action,
                         )
                         budget, max_budget = simulate(prices, preds)
                         # save stream, n_dim, n_points, detector_type, seq_len, hidden_sizes, train_loss, test_loss to CVS file
-                        with open("crypto_lstm.csv", "a") as f:
+                        with open("../results/crypto_lstm.csv", "a") as f:
                             f.write(
                                 f"{path.split("/")[-1].split("_")[0]};1;{len(data)};{detector_type};{drift_action.__name__};{seq_len};{hidden_sizes};{loss};{mae_full};{mae_warmup};{budget};{max_budget}\n"
                             )
@@ -290,11 +293,11 @@ if __name__ == "__main__":
                             optimizer,
                             loss_fn,
                             device=device,
-                            drift_action=drift_action
+                            drift_action=drift_action,
                         )
                         budget, max_budget = simulate(prices, preds)
                         # save stream, n_dim, n_points, detector_type, seq_len, hidden_sizes, train_loss, test_loss to CVS file
-                        with open("crypto_transformer.csv", "a") as f:
+                        with open("../results/crypto_transformer.csv", "a") as f:
                             f.write(
                                 f"{path.split("/")[-1].split("_")[0]};1;{len(data)};{detector_type};{drift_action.__name__};{seq_len};{hidden_sizes};{loss};{mae_full};{mae_warmup};{budget};{max_budget}\n"
                             )

@@ -1,10 +1,11 @@
 from river.drift import ADWIN, PageHinkley
 
+
 class DriftDetector:
-    def __init__(self, method='ADWIN'):
-        if method == 'ADWIN':
+    def __init__(self, method="ADWIN"):
+        if method == "ADWIN":
             self.detector = ADWIN(clock=1)
-        elif method == 'PageHinkley':
+        elif method == "PageHinkley":
             self.detector = PageHinkley()
         else:
             raise ValueError(f"Unknown drift detector {method}")
