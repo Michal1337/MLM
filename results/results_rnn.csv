@@ -1,3 +1,4 @@
+stream;ndim;nsamples;detector;lr_strategy;seq_len;hidden_size;mse;mae_warmup;mae
 generate_trend_drift;1;20000;ADWIN;increase_lr_only;16;16;1.0623348753261666;0.8182677206680996;0.8185158988305802
 generate_trend_drift;1;20000;ADWIN;increase_lr_only;16;32;1.0513636973489942;0.8165777523589309;0.815862285102262
 generate_trend_drift;1;20000;ADWIN;increase_lr_only;16;64;1.0734513345658891;0.8259145367588393;0.8252099442550744

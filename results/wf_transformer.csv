@@ -1,3 +1,4 @@
+stream;ndim;nsamples;detector;lr_strategy;seq_len;hidden_size;mse;mae_warmup;mae
 generate_water_flow_data;1;1268;ADWIN;increase_lr_only;16;64;2403.2557443141186;24.19888299777184;34.38262200812562
 generate_water_flow_data;1;1268;ADWIN;increase_lr_only;16;64;1574.6440311119627;12.650259604820839;23.631615516095877
 generate_water_flow_data;1;1268;ADWIN;increase_lr_only;16;64;1044.574846871929;5.706637309147761;16.27090960798172

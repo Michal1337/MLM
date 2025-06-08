@@ -34,10 +34,6 @@ def train_model_mlp(model, x_all, y_all, optimizer, loss_fn, device):
     preds = []
     all_loss = []
 
-    # For drift action state
-    base_lrs = [pg["lr"] for pg in optimizer.param_groups]
-    decay_state = {"base_lrs": base_lrs, "current_decay_step": 0}
-
     step = 0
     mae_values = []
     mae_values_full = []
